@@ -1,0 +1,30 @@
+{
+  "name": "projeto17-shortly",
+  "version": "1.0.0",
+  "description": "Projeto de encurtador de urls",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gustavo-de-assis/projeto17-shortly.git"
+  },
+  "author": "Gustavo de Assis Siqueira",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gustavo-de-assis/projeto17-shortly/issues"
+  },
+  "homepage": "https://github.com/gustavo-de-assis/projeto17-shortly#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "joi": "^17.7.0",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
