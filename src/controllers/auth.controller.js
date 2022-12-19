@@ -28,31 +28,29 @@ export async function signUp (req, res){
 }
 
 export async function signIn (req, res){
-    const {email, password} = req.body;
+    const user = res.locals.user;
+
+    const token = uuidV4();
+    const session = {token, userId: user.rows[0].id};
+    console.log(session);
 
     try{
-        const user = await connection.query(`
-            SELECT * FROM users u WHERE u.email = $1;
-        `,[email]);
-
-        if (user.rows.length === 0){
-            return res.status(404).send("User not Found!");
-        }
-
-        const passwordCheck = bcrypt.compareSync(
-            password,
-            user.rows[0].password
-        );
-
-        if (!passwordCheck) {
-            return res.sendStatus(401);
-        }
-
-        console.log("logado!");
+        const existingSession = await connection.query(`SELECT * FROM sessions WHERE "userId" = $1;`, [user.rows[0].id]);
         
+        if (existingSession.rows.length === 0) {
+            // Session does not exist => create one
+            const newSession = await connection.query(`INSERT INTO sessions("token", "userId") VALUES ($1, $2);`,[session.token, session.userId]);
+        } else {
+            // Session exists => update token
+            await connection.query(`UPDATE sessions SET token = $1 WHERE "userId" = $2`, [session.token, session.userId])
+        }
 
-    } catch (err){
+        res.status(200).send(session);
+
+    } catch (err) {
         console.log(err);
         res.sendStatus(500);
     }
+
+
 }
