@@ -26,3 +26,32 @@ export async function signUp (req, res){
         res.sendStatus(500);
     }
 }
+
+export async function signIn (req, res){
+    const {email, password} = req.body;
+
+    try{
+        const user = await connection.query(`
+            SELECT * FROM users u WHERE u.email = $1;
+        `,[email]);
+
+        if (user.rows.length === 0){
+            return res.status(404).send("User not Found!");
+        }
+
+        const passwordCheck = bcrypt.compareSync(
+            password,
+            user.rows[0].password
+        );
+
+        if (!passwordCheck) {
+            return res.sendStatus(401);
+        }
+
+        console.log("logado!");
+
+    } catch (err){
+        console.log(err);
+        res.sendStatus(500);
+    }
+}
