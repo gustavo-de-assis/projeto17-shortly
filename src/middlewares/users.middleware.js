@@ -3,8 +3,9 @@ import joi from "joi";
 const userSchema = joi.object({
     name: joi.string().min(3).required(),
     email: joi.string().required(),
-    password: joi.string().min(6).required()
-})
+    password: joi.string().min(6).required(),
+    confirmPassword: joi.ref('password')
+}).with('password', 'confirmPassword');
 
 export function userValidation (req, res, next){
     const user = req.body;

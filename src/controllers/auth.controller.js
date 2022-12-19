@@ -49,6 +49,7 @@ export async function signIn (req, res){
         }
 
         console.log("logado!");
+        
 
     } catch (err){
         console.log(err);
