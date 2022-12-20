@@ -1,34 +1,70 @@
 import { nanoid } from "nanoid";
 import { connection } from "../database/db.js";
 
-export async function shortenUrl(req, res){
-    const user = res.locals.user;
-    const {url} = req.body;
+export async function shortenUrl(req, res) {
+    const { url } = req.body;
     const shortUrl = nanoid();
 
-    try{
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
 
-        const storedUrl = await connection.query(`SELECT * FROM urls WHERE url = $1`, [url]);
+    console.log(token)
+
+    if(!token){
+        return res.status(401).send("Unauthorized!")
+    }
+
+    try {
+        const storedUrl = await connection.query(`
+            SELECT * 
+            FROM urls 
+            WHERE url = $1`,
+            [url]);
 
         // URL exists?
-        if( storedUrl.rows.length > 0){
+        if (storedUrl.rows.length > 0) {
             return res.status(409).send("This URL has already been saved");
         }
+        else {
+            const user = await connection.query(`
+                SELECT u.id 
+                FROM users u 
+                    JOIN sessions s 
+                ON u.id = s."userId" 
+                    WHERE s.token = $1;`, 
+                [token]);
+            
+            if(user.rows.length === 0){
+                return res.status(404).send("User not Found!");
+            }
 
-        else{
-            await connection.query(`INSERT INTO urls (url, "shortUrl") VALUES ($1, $2)`, [url, shortUrl]);
+            await connection.query(`
+                INSERT 
+                INTO urls 
+                (url, "shortUrl") 
+                VALUES ($1, $2)`,
+                [url, shortUrl]);
 
-            const newUrl = (`SELECT * FROM urls WHERE url = $1`, [url]);
+            const newUrl = await connection.query(`
+                SELECT * 
+                FROM urls 
+                WHERE url = $1`,
+                [url]);
 
-            await connection.query(`INSERT INTO "shortened_url" ("userId", "urlId", "visitCount") VALUES ($1, $2, 0)`, [userId, newUrl.rows[0].id]); 
-        } 
-        // FAlta buscar o id do usuário no banco;
+            console.log("User id:",user.rows[0].id, "Url id:" ,newUrl.rows[0].id);
+
+            await connection.query(`
+                INSERT 
+                INTO shortened_urls 
+                ("userId", "urlId", "visitCount") 
+                VALUES ($1, $2, 0)`,
+                [user.rows[0].id, newUrl.rows[0].id]);
+        }
 
         res.sendStatus(200);
 
-    } catch (err){
+    } catch (err) {
         console.log(err);
         res.sendStatus(500);
     }
-    console.log (user, url);
 }
