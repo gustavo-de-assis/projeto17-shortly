@@ -13,7 +13,7 @@ export async function signUp (req, res){
         if (user.rows.length > 0){
             return res.status(409).send("This email has already been used!");
         }
-
+        
         const hashPassword = bcrypt.hashSync(password, 10);
 
         await connection.query(`INSERT INTO users (name, email, password) VALUES ($1, $2, $3)`, [name, email, hashPassword
@@ -39,7 +39,7 @@ export async function signIn (req, res){
         
         if (existingSession.rows.length === 0) {
             // Session does not exist => create one
-            const newSession = await connection.query(`INSERT INTO sessions("token", "userId") VALUES ($1, $2);`,[session.token, session.userId]);
+            await connection.query(`INSERT INTO sessions("token", "userId") VALUES ($1, $2);`,[session.token, session.userId]);
         } else {
             // Session exists => update token
             await connection.query(`UPDATE sessions SET token = $1 WHERE "userId" = $2`, [session.token, session.userId])

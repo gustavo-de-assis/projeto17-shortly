@@ -68,3 +68,23 @@ export async function shortenUrl(req, res) {
         res.sendStatus(500);
     }
 }
+
+export async function getUrlById(req, res) {
+    const {id} = req.params;
+
+    try{
+        const url = await connection.query(`
+            SELECT * FROM urls WHERE id = $1
+        `, [id]);
+
+        if(url.rows.length === 0) {
+            return res.status(404).send("Url not found!");
+        }
+
+        res.status(200).send(url.rows[0]);
+
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+}
