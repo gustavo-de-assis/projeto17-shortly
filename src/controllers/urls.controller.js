@@ -3,7 +3,7 @@ import { connection } from "../database/db.js";
 
 export async function shortenUrl(req, res) {
     const { url } = req.body;
-    const shortUrl = nanoid();
+    const shortUrl = nanoid(13);
 
     const { authorization } = req.headers;
     const token = authorization?.replace('Bearer ', '');
@@ -41,24 +41,9 @@ export async function shortenUrl(req, res) {
             await connection.query(`
                 INSERT 
                 INTO urls 
-                (url, "shortUrl") 
-                VALUES ($1, $2)`,
-                [url, shortUrl]);
-
-            const newUrl = await connection.query(`
-                SELECT * 
-                FROM urls 
-                WHERE url = $1`,
-                [url]);
-
-            console.log("User id:",user.rows[0].id, "Url id:" ,newUrl.rows[0].id);
-
-            await connection.query(`
-                INSERT 
-                INTO shortened_urls 
-                ("userId", "urlId", "visitCount") 
-                VALUES ($1, $2, 0)`,
-                [user.rows[0].id, newUrl.rows[0].id]);
+                (url, "shortUrl", "userId") 
+                VALUES ($1, $2, $3)`,
+                [url, shortUrl, user.rows[0].id]);
         }
 
         res.sendStatus(200);
