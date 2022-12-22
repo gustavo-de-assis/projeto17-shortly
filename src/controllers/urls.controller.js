@@ -73,3 +73,36 @@ export async function getUrlById(req, res) {
         res.sendStatus(500);
     }
 }
+
+export async function openShortenedUrl(req, res) {
+    const {shortUrl} = req.params;
+
+    try{
+        const url = await connection.query(`
+            SELECT * FROM urls WHERE "shortUrl" = $1;
+        `, [shortUrl]);
+
+        if(url.rows.length === 0){
+            return res.status(404).send("Url not found!");
+        }
+        
+        const urlCounter = url.rows[0].visitCount +1;
+        
+        await connection.query(`
+            UPDATE urls SET "visitCount" = $1 WHERE id = $2;
+        `,[urlCounter, url.rows[0].id]);
+
+        const user = await connection.query('SELECT * FROM users WHERE id = $1', [url.rows[0].userId]);
+        const userCounter = user.rows[0].visitCount +1;
+
+        await connection.query(`
+            UPDATE users SET "visitCount" = $1 WHERE id = $2;
+        `, [userCounter, user.rows[0].id]);
+        
+        res.redirect(url.rows[0].url);
+
+    } catch (err){
+        console.log(err);
+        res.sendStatus(500);
+    }
+}
