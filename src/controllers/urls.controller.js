@@ -106,3 +106,42 @@ export async function openShortenedUrl(req, res) {
         res.sendStatus(500);
     }
 }
+
+export async function deleteUrl (req, res){
+    const { authorization } = req.headers;
+    const {id} = req.params;
+
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token){
+        return res.status(401).send("Unauthorized!")
+    }
+
+    try{
+        const url = await connection.query(`
+            SELECT * FROM urls WHERE id = $1
+        `, [id]);
+
+        if (url.rows.length === 0){
+            return res.status(404).send("Url not found!");
+        }
+        const user = await connection.query(`SELECT u.id FROM users u JOIN sessions s ON u.id = s."userId" WHERE s.token = $1`,[token]);
+
+        if (user.rows.length === 0){
+            return res.status(404).send("User not found!");
+        }
+        const userId = user.rows[0].id;
+
+        if(url.rows[0].userId !== userId){
+            return res.status(401).send("User does not match to url owner");
+        } else {
+            await connection.query(`DELETE FROM urls WHERE id = $1;`, [id]);
+            res.sendStatus(200);
+        }
+
+    } catch (err){
+        console.log(err);
+        req.sendStatus(500);
+    }
+
+}
