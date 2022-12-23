@@ -12,4 +12,6 @@ app.use(express.json());
 
 app.use(router);
 
-app.listen(process.env.PORT, ()=> console.log(`Server Running at port ${process.env.PORT}!`));
+
+const port = process.env.PORT;
+app.listen(port, ()=> console.log(`Server Running at port ${port}!`));
